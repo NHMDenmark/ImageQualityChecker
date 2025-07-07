@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 import os
 import sys
+import random
 import threading
 from BlackLineFinder import black_line_finder
 
@@ -21,6 +22,8 @@ class BlackLineFinderApp:
 
         self.last_run_state = {"folder": None, "top": None, "bottom": None}
 
+        self.happy_msg = self.create_happiness()
+        
         # Choose folder button
         self.choose_button = tk.Button(root, text="Choose Folder", command=self.choose_folder)
         self.choose_button.pack(pady=10)
@@ -135,11 +138,27 @@ class BlackLineFinderApp:
                 # Update progress bar on UI thread
                 self.root.after(0, self.progress.step, 1)
 
-            self._show_popup(f"{os.path.basename(os.path.normpath(folder))} completed! \nFound black lines: {black_lines}")
+            self._show_popup(f"{os.path.basename(os.path.normpath(folder))} completed! \nFound black lines: {black_lines} \n\n{self.happy_msg}")
         except Exception as e:
             self._show_popup(f"Something went wrong for {os.path.basename(os.path.normpath(folder))}:\n{str(e)}", error=True)
 
         self.root.after(0, self._check_if_ready)
+
+    def create_happiness(self):
+
+        noun = ["A penguin", "A lion", "A sealion", "A biologist", "A puppy", "A goldfish", "A cat", "The sun", "A ghost", "A dragon", "A bumble-bee"]
+
+        verb = ["is waving", "is smiling", "is winking", "is basking", "is dancing", "is jumping", "is singing"]
+
+        adjective = ["happily", "sweetly", "joyfully", "excitedly", "playfully", "cheerfully", "gently", "gracefully", "enthusiastically"]
+
+        n = noun[random.randint(0,len(noun)-1)]
+        v = verb[random.randint(0,len(verb)-1)]
+        a = adjective[random.randint(0,len(adjective)-1)]
+        
+        poetry = f"{n} {v} {a}."
+
+        return poetry
 
     def _show_popup(self, message, error=False):
         def show():
