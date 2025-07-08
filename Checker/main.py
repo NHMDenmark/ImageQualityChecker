@@ -5,6 +5,7 @@ import sys
 import random
 import threading
 from BlackLineFinder import black_line_finder
+from FileChecker import file_checker
 
 script_dir = os.path.abspath(os.path.dirname(__file__))
 project_root = os.path.abspath(os.path.join(script_dir, '..'))
@@ -14,7 +15,7 @@ sys.path.append(project_root)
 class BlackLineFinderApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Black Line Finder")
+        self.root.title("Image Quality Checker")
 
         self.folder_path = tk.StringVar()
         self.top_margin = tk.StringVar()
@@ -43,7 +44,7 @@ class BlackLineFinderApp:
         self.progress["maximum"] = 100  # Will be set dynamically later
 
         # Run button
-        self.run_button = tk.Button(root, text="Run Black Line Finder", command=self.run_script, state=tk.DISABLED)
+        self.run_button = tk.Button(root, text="Run Image Checker", command=self.run_script, state=tk.DISABLED)
         self.run_button.pack(pady=10)
 
         # Track input changes
@@ -109,15 +110,21 @@ class BlackLineFinderApp:
 
     def _run_script_thread(self, folder, top, bottom):
         try:
-            tif_files = [f for f in os.listdir(folder) if f.lower().endswith(".tif")]
-            total = len(tif_files)
+            files = []
+            for ext in [".tif", ".tiff", ".cr2", ".cr3", ".raf", ".jpg", ".jpeg"]:
+                files.extend([f for f in os.listdir(folder) if f.lower().endswith(ext)])
+            
+            total = len(files)
 
             if total == 0:
-                self._show_popup("No .tif files found in the folder.")
+                self._show_popup("No image files found in the folder.")
                 return
 
             self.progress["maximum"] = total
             self.progress["value"] = 0
+
+            f_checker = file_checker.FileChecker(folder)
+            fc = f_checker.check_matching_files()
 
             blf = black_line_finder.BlackLineFinder(
                 folder,
@@ -127,18 +134,22 @@ class BlackLineFinderApp:
 
             OUTPUT_FILE = f"{os.path.basename(os.path.normpath(folder))}.txt"
             black_lines = False
+            first_black_line = True
 
-            for idx, filename in enumerate(tif_files, start=1):
+            for idx, filename in enumerate(files, start=1):
                 image_path = os.path.join(folder, filename)
                 if blf.detect_black_lines(image_path):
                     with open(OUTPUT_FILE, 'a') as f:
+                        if first_black_line:
+                            f.write(f"\nBlack lines:\n")
+                            first_black_line = False
                         f.write(f"{filename}\n")
                         black_lines = True
 
                 # Update progress bar on UI thread
                 self.root.after(0, self.progress.step, 1)
 
-            self._show_popup(f"{os.path.basename(os.path.normpath(folder))} completed! \nFound black lines: {black_lines} \n\n{self.happy_msg}")
+            self._show_popup(f"{os.path.basename(os.path.normpath(folder))} completed! \nFound black lines: {black_lines} \nMissing files(json/tif): {fc} \n\n{self.happy_msg}")
         except Exception as e:
             self._show_popup(f"Something went wrong for {os.path.basename(os.path.normpath(folder))}:\n{str(e)}", error=True)
 
@@ -146,7 +157,7 @@ class BlackLineFinderApp:
 
     def create_happiness(self):
 
-        noun = ["A penguin", "A lion", "A sealion", "A biologist", "A puppy", "A goldfish", "A cat", "The sun", "A ghost", "A dragon", "A bumble-bee"]
+        noun = ["A penguin", "A lion", "A sealion", "A biologist", "A puppy", "A goldfish", "A cat", "The sun", "A ghost", "A dragon", "A bumble-bee", "A narwhal"]
 
         verb = ["is waving", "is smiling", "is winking", "is basking", "is dancing", "is jumping", "is singing"]
 
