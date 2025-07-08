@@ -132,7 +132,7 @@ class BlackLineFinderApp:
                 bottom_margin_percent=bottom
             )
 
-            OUTPUT_FILE = f"{os.path.basename(os.path.normpath(folder))}.txt"
+            OUTPUT_FILE = os.path.join(folder, f"{os.path.basename(os.path.normpath(folder))}.txt")
             black_lines = False
             first_black_line = True
 
