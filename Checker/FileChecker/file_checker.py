@@ -12,7 +12,7 @@ class FileChecker:
 
     def __init__(self, folder_path):
         self.folder_path = folder_path
-        self.OUTPUT_FILE = os.path.join(folder, f"{os.path.basename(os.path.normpath(folder_path))}.txt")
+        self.OUTPUT_FILE = os.path.join(folder_path, f"{os.path.basename(os.path.normpath(folder_path))}.txt")
 
     def check_matching_files(self):
         tif_files = {os.path.splitext(f)[0] for f in os.listdir(self.folder_path) if f.lower().endswith('.tif')}
