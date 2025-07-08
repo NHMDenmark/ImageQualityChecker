@@ -1,0 +1,65 @@
+name: Build and Release ImageQualityChecker
+
+on:
+  push:
+    tags:
+      - v*.*.*
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+          pip install -r requirements.txt
+
+      - name: Build with PyInstaller
+        run: |
+          pyinstaller --noconfirm --windowed --name "ImageQualityChecker" Checker/main.py
+
+      - name: Package output
+        run: |
+          mkdir release
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            powershell Compress-Archive -Path dist/ImageQualityChecker.exe -DestinationPath release/ImageQualityChecker-${{ runner.os }}.zip
+          elif [[ "$RUNNER_OS" == "macOS" ]]; then
+            mkdir dmg_dir
+            cp -R dist/ImageQualityChecker.app dmg_dir/
+            hdiutil create -volname ImageQualityChecker -srcfolder dmg_dir -ov -format UDZO release/ImageQualityChecker-${{ runner.os }}.dmg
+          fi
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ImageQualityChecker-${{ matrix.os }}
+          path: release/
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: true
+          files: artifacts/**/*.zip
+                artifacts/**/*.dmg
