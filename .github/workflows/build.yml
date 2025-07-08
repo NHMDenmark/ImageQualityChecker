@@ -31,17 +31,19 @@ jobs:
         run: |
           pyinstaller --noconfirm --windowed --name "ImageQualityChecker" Checker/main.py
 
-      - name: Package app
-        shell: bash
+      - name: Package for Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
         run: |
-          mkdir release
-          if [[ "$RUNNER_OS" == "Windows" ]]; then
-            powershell Compress-Archive -Path dist/ImageQualityChecker.exe -DestinationPath release/ImageQualityChecker-${{ runner.os }}.zip
-          elif [[ "$RUNNER_OS" == "macOS" ]]; then
-            mkdir dmg_dir
-            cp -R dist/ImageQualityChecker.app dmg_dir/
-            hdiutil create -volname ImageQualityChecker -srcfolder dmg_dir -ov -format UDZO release/ImageQualityChecker-${{ runner.os }}.dmg
-          fi
+          New-Item -ItemType Directory -Force -Path release
+          Compress-Archive -Path dist/ImageQualityChecker.exe -DestinationPath release/ImageQualityChecker-${{ runner.os }}.zip
+
+      - name: Package for macOS
+        if: runner.os == 'macOS'
+        run: |
+          mkdir -p release dmg_dir
+          cp -R dist/ImageQualityChecker.app dmg_dir/
+          hdiutil create -volname ImageQualityChecker -srcfolder dmg_dir -ov -format UDZO release/ImageQualityChecker-${{ runner.os }}.dmg
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -62,5 +64,6 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           draft: true
-          files: artifacts/**/*.zip
-                artifacts/**/*.dmg
+          files: |
+            artifacts/**/*.zip
+            artifacts/**/*.dmg
