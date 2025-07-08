@@ -31,7 +31,8 @@ jobs:
         run: |
           pyinstaller --noconfirm --windowed --name "ImageQualityChecker" Checker/main.py
 
-      - name: Package output
+      - name: Package app
+        shell: bash
         run: |
           mkdir release
           if [[ "$RUNNER_OS" == "Windows" ]]; then
