@@ -149,7 +149,7 @@ class BlackLineFinderApp:
                 # Update progress bar on UI thread
                 self.root.after(0, self.progress.step, 1)
 
-            self._show_popup(f"{os.path.basename(os.path.normpath(folder))} completed! \nFound black lines: {black_lines} \nMissing files(json/tif): {fc} \n\n{self.happy_msg}")
+            self._show_popup(f"{os.path.basename(os.path.normpath(folder))} completed! \nFound black lines: {black_lines} \nMissing files(json/tif): {fc} \n\n{self.create_happiness()}")
         except Exception as e:
             self._show_popup(f"Something went wrong for {os.path.basename(os.path.normpath(folder))}:\n{str(e)}", error=True)
 
